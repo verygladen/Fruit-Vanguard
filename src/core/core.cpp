@@ -24,6 +24,8 @@
 #ifdef ENABLE_FFMPEG_VIDEO_DUMPER
 #include "core/dumping/ffmpeg_backend.h"
 #endif
+#include <vanguardwrapper/UnmanagedWrapper.h>
+
 #include "core/custom_tex_cache.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/global.h"
@@ -113,6 +115,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         LOG_INFO(Core, "Begin load");
         try {
             System::LoadState(param);
+            UnmanagedWrapper::VANGUARD_LOADSTATE_DONE();
             LOG_INFO(Core, "Load completed");
         } catch (const std::exception& e) {
             LOG_ERROR(Core, "Error loading: {}", e.what());
@@ -126,6 +129,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         LOG_INFO(Core, "Begin save");
         try {
             System::SaveState(param);
+            UnmanagedWrapper::VANGUARD_SAVESTATE_DONE();
             LOG_INFO(Core, "Save completed");
         } catch (const std::exception& e) {
             LOG_ERROR(Core, "Error saving: {}", e.what());

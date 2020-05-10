@@ -27,6 +27,7 @@ namespace VideoCore {
 enum class LoadCallbackStage;
 }
 
+
 class GLContext : public Frontend::GraphicsContext {
 public:
     explicit GLContext(QOpenGLContext* shared_context);

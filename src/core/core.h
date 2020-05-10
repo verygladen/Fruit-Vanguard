@@ -307,6 +307,8 @@ public:
     void SaveState(u32 slot) const;
 
     void LoadState(u32 slot);
+    void SaveState(std::string path) const;
+    void LoadState(std::string path);
 
 private:
     /**

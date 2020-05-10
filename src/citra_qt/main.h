@@ -75,6 +75,10 @@ public:
 
     bool DropAction(QDropEvent* event);
     void AcceptDropEvent(QDropEvent* event);
+    void SetEmuThread(bool running);
+
+    void BootGame(const QString& filename);
+    void ShutdownGame();
 
 public slots:
     void OnAppFocusStateChanged(Qt::ApplicationState state);
@@ -121,8 +125,6 @@ private:
     void AllowOSSleep();
 
     bool LoadROM(const QString& filename);
-    void BootGame(const QString& filename);
-    void ShutdownGame();
 
     void ShowTelemetryCallout();
     void ShowUpdaterWidgets();

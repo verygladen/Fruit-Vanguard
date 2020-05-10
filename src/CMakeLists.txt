@@ -96,6 +96,8 @@ else()
 endif()
 
 add_subdirectory(common)
+add_subdirectory(vanguard)
+add_subdirectory(vanguardwrapper)
 add_subdirectory(core)
 add_subdirectory(video_core)
 add_subdirectory(audio_core)
