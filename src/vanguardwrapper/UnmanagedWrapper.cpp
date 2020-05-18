@@ -3,8 +3,9 @@
 #include "UnmanagedWrapper.h"
 #include "core/core.h"
 #include "Vanguard/VanguardClient.h"
-#include <thread>
 #include <chrono>
+
+#include "video_core/renderer_base.h"
 
 //C++/CLI has various restrictions (no std::mutex for example), so we can't actually include certain headers directly
 //What we CAN do is wrap those functions
@@ -18,6 +19,14 @@ void UnmanagedWrapper::VANGUARD_EXIT() {
 std::string GetSaveStatePath(u64 program_id, u32 slot) {
     return fmt::format("{}{:016X}.{:02d}.cst", FileUtil::GetUserPath(FileUtil::UserPath::StatesDir),
                        program_id, slot);
+}
+
+
+bool UnmanagedWrapper::IS_N3DS() {
+    return Settings::values.is_new_3ds ;
+}
+void UnmanagedWrapper::SET_N3DS(bool isN3DS) {
+    Settings::values.is_new_3ds = isN3DS;
 }
 
 std::string UnmanagedWrapper::VANGUARD_GETGAMENAME() {
@@ -69,17 +78,23 @@ void UnmanagedWrapper::VANGUARD_RESUMEEMULATION() {
     //GetCoreThread().Resume();
 }
 
-void UnmanagedWrapper::PADDR_POKEBYTE(long long addr, unsigned char val) {
-    auto ptr = Core::System::GetInstance().Memory().GetPhysicalRef(0x20000000).GetPtr();
-    std::memcpy(ptr + addr, &val, sizeof(u8));
+void UnmanagedWrapper::PADDR_POKEBYTE(long long addr, unsigned char val, long offset) {
+    u8* ptr = Core::System::GetInstance().Memory().GetPhysicalRef(offset).GetPtr();
+    unsigned char* dst = ptr + addr;
+    std::memcpy(dst, &val, sizeof(u8));
+    Core::System::GetInstance().InvalidateCacheRange(reinterpret_cast<u32>(dst), 1);
+
+    if (VideoCore::g_renderer != nullptr) {
+        VideoCore::g_renderer->Rasterizer()->InvalidateRegion(reinterpret_cast<PAddr>(dst), 1);
+    }
+
 }
 
-unsigned char UnmanagedWrapper::PADDR_PEEKBYTE(long long addr) {
-    auto ptr = Core::System::GetInstance().Memory().GetPhysicalRef(0x20000000).GetPtr();
+unsigned char UnmanagedWrapper::PADDR_PEEKBYTE(long long addr, long offset) {
+    auto* ptr = Core::System::GetInstance().Memory().GetPhysicalRef(offset).GetPtr();
     u8 value;
     std::memcpy(&value, ptr + addr, sizeof(u8));
     return value;
-    return 0;
 }
 
 std::string UnmanagedWrapper::VANGUARD_SAVECONFIG() {

@@ -199,7 +199,10 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     game_list->PopulateAsync(UISettings::values.game_dirs);
 
     // Show one-time "callout" messages to the user
-    ShowTelemetryCallout();
+    //ShowTelemetryCallout();
+    //VANGUARD_HIJACK - We don't want telemetry
+    Settings::values.enable_telemetry = false;
+    Settings::Apply();
 
     // make sure menubar has the arrow cursor instead of inheriting from this
     ui.menubar->setCursor(QCursor());

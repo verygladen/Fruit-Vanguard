@@ -17,12 +17,14 @@ public:
     static void VANGUARD_STOPGAME();
     static void VANGUARD_LOADGAME(const std::string& file);
     static std::string VANGUARD_GETGAMENAME();
-    static void PADDR_POKEBYTE(long long addr, unsigned char val);
-    static unsigned char PADDR_PEEKBYTE(long long addr);
+    static void PADDR_POKEBYTE(long long addr, unsigned char val, long offset);
+    static unsigned char PADDR_PEEKBYTE(long long addr, long offset);
     static std::string VANGUARD_SAVECONFIG();
     static void VANGUARD_LOADCONFIG(std::string cfg);
     static void VANGUARD_CORESTEP();
     static void LOAD_STATE_DONE();
+    static bool IS_N3DS();
+    static void SET_N3DS(bool isN3DS);
 
     static bool savestate_done; //REPLACE THIS
 };

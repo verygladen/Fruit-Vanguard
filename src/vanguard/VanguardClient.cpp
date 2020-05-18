@@ -116,7 +116,7 @@ getDefaultPartial() {
     partial->Set(VSPEC::OPENROMFILENAME, String::Empty);
     partial->Set(VSPEC::OVERRIDE_DEFAULTMAXINTENSITY, 100000);
     partial->Set(VSPEC::SYNCSETTINGS, String::Empty);
-    partial->Set(VSPEC::MEMORYDOMAINS_BLACKLISTEDDOMAINS, gcnew array<String^>{""
+    partial->Set(VSPEC::MEMORYDOMAINS_BLACKLISTEDDOMAINS, gcnew array<String ^>{"VRAM", "DSP", "N3DSExRam"
                  });
     partial->Set(VSPEC::SYSTEM, String::Empty);
     partial->Set(VSPEC::LOADSTATE_USES_CALLBACKS, true);
@@ -273,10 +273,19 @@ void VanguardClient::SaveWindowPosition() {
 }
 
 String^ VanguardClient::GetSyncSettings() {
+    //For now, just sync if it's N3DS or not
+    if (UnmanagedWrapper::IS_N3DS()) {
+        return "N3DS";
+    }
     return "";
 }
 
 void VanguardClient::SetSyncSettings(String^ ss) {
+    if(ss == "N3DS") {
+        UnmanagedWrapper::SET_N3DS(true);
+    }else {
+        UnmanagedWrapper::SET_N3DS(false);
+    }
 }
 
 #pragma region MemoryDomains
@@ -294,17 +303,59 @@ public:
     virtual void PokeByte(long long addr, unsigned char val);
 };
 
+public
+    ref class VRAM : RTCV::CorruptCore::IMemoryDomain {
+public:
+    property System::String^ Name { virtual System::String^ get(); }
+    property long long Size { virtual long long get(); }
+    property int WordSize { virtual int get(); }
+    property bool BigEndian { virtual bool get(); }
+    virtual unsigned char PeekByte(long long addr);
+    virtual array<unsigned char>^ PeekBytes(long long address, int length);
+    virtual void PokeByte(long long addr, unsigned char val);
+};
+
+public
+    ref class DSP : RTCV::CorruptCore::IMemoryDomain {
+public:
+    property System::String^ Name { virtual System::String^ get(); }
+    property long long Size { virtual long long get(); }
+    property int WordSize { virtual int get(); }
+    property bool BigEndian { virtual bool get(); }
+    virtual unsigned char PeekByte(long long addr);
+    virtual array<unsigned char>^ PeekBytes(long long address, int length);
+    virtual void PokeByte(long long addr, unsigned char val);
+};
+public
+    ref class N3DSExRam : RTCV::CorruptCore::IMemoryDomain {
+public:
+    property System::String^ Name { virtual System::String^ get(); }
+    property long long Size { virtual long long get(); }
+    property int WordSize { virtual int get(); }
+    property bool BigEndian { virtual bool get(); }
+    virtual unsigned char PeekByte(long long addr);
+    virtual array<unsigned char>^ PeekBytes(long long address, int length);
+    virtual void PokeByte(long long addr, unsigned char val);
+};
+
 
 #define WORD_SIZE 4
 #define BIG_ENDIAN false
 
-delegate void MessageDelegate(Object^);
+delegate void MessageDelegate(Object ^);
 #pragma region FCRam
-String^ FCRam::Name::get() {
-    return "FCRam";
+String ^ FCRam::Name::get() {
+    if (UnmanagedWrapper::IS_N3DS()) {
+        return "FCRam(N3DS)";
+    }else {
+        return "FCRam";
+    }
 }
 
 long long FCRam::Size::get() {
+    if (UnmanagedWrapper::IS_N3DS()) {
+        return Memory::FCRAM_N3DS_SIZE;
+    }
     return Memory::FCRAM_SIZE;
 }
 
@@ -317,15 +368,114 @@ bool FCRam::BigEndian::get() {
 }
 
 unsigned char FCRam::PeekByte(long long addr) {
-    return UnmanagedWrapper::PADDR_PEEKBYTE(addr);
+    return UnmanagedWrapper::PADDR_PEEKBYTE(addr, Memory::FCRAM_PADDR);
 }
 
 void FCRam::PokeByte(long long addr, unsigned char val) {
-    UnmanagedWrapper::PADDR_POKEBYTE(addr, val);
+    UnmanagedWrapper::PADDR_POKEBYTE(addr, val, Memory::FCRAM_PADDR);
 }
 
-array<unsigned char>^ FCRam::PeekBytes(long long address, int length) {
-    array<unsigned char>^ bytes = gcnew array<unsigned char>(length);
+array<unsigned char> ^ FCRam::PeekBytes(long long address, int length) {
+    array<unsigned char> ^ bytes = gcnew array<unsigned char>(length);
+    for (int i = 0; i < length; i++) {
+        bytes[i] = PeekByte(address + i);
+    }
+    return bytes;
+}
+#pragma endregion
+#pragma region VRAM
+String ^ VRAM::Name::get() {
+    return "VRAM";
+}
+
+long long VRAM::Size::get() {
+    return Memory::VRAM_SIZE;
+}
+
+int VRAM::WordSize::get() {
+    return WORD_SIZE;
+}
+
+bool VRAM::BigEndian::get() {
+    return BIG_ENDIAN;
+}
+
+unsigned char VRAM::PeekByte(long long addr) {
+    return UnmanagedWrapper::PADDR_PEEKBYTE(addr, Memory::VRAM_PADDR);
+}
+
+void VRAM::PokeByte(long long addr, unsigned char val) {
+    UnmanagedWrapper::PADDR_POKEBYTE(addr, val, Memory::VRAM_PADDR);
+}
+
+array<unsigned char> ^ VRAM::PeekBytes(long long address, int length) {
+    array<unsigned char> ^ bytes = gcnew array<unsigned char>(length);
+    for (int i = 0; i < length; i++) {
+        bytes[i] = PeekByte(address + i);
+    }
+    return bytes;
+}
+#pragma endregion
+#pragma region DSP
+String ^ DSP::Name::get() {
+    return "DSP";
+}
+
+long long DSP::Size::get() {
+    return Memory::DSP_RAM_SIZE;
+}
+
+int DSP::WordSize::get() {
+    return WORD_SIZE;
+}
+
+bool DSP::BigEndian::get() {
+    return BIG_ENDIAN;
+}
+
+unsigned char DSP::PeekByte(long long addr) {
+    return UnmanagedWrapper::PADDR_PEEKBYTE(addr, Memory::DSP_RAM_PADDR);
+}
+
+void DSP::PokeByte(long long addr, unsigned char val) {
+    UnmanagedWrapper::PADDR_POKEBYTE(addr, val, Memory::DSP_RAM_PADDR);
+}
+
+array<unsigned char> ^ DSP::PeekBytes(long long address, int length) {
+    array<unsigned char> ^ bytes = gcnew array<unsigned char>(length);
+    for (int i = 0; i < length; i++) {
+        bytes[i] = PeekByte(address + i);
+    }
+    return bytes;
+}
+#pragma endregion
+#pragma region N3DSExRam
+String ^ N3DSExRam::Name::get() {
+    return "N3DSExRam";
+}
+
+long long N3DSExRam::Size::get() {
+    return Memory::N3DS_EXTRA_RAM_SIZE;
+}
+
+int N3DSExRam::WordSize::get() {
+    return WORD_SIZE;
+}
+
+bool N3DSExRam::BigEndian::get() {
+    return BIG_ENDIAN;
+}
+
+unsigned char N3DSExRam::PeekByte(long long addr) {
+    return UnmanagedWrapper::PADDR_PEEKBYTE(addr, Memory::N3DS_EXTRA_RAM_PADDR);
+}
+
+void N3DSExRam::PokeByte(long long addr, unsigned char val) {
+    UnmanagedWrapper::PADDR_POKEBYTE(addr, val, Memory::N3DS_EXTRA_RAM_PADDR);
+}
+
+array<unsigned char> ^ N3DSExRam::PeekBytes(long long address, int length) {
+    array<unsigned char> ^ bytes = gcnew array<unsigned char>(length);
     for (int i = 0; i < length; i++) {
         bytes[i] = PeekByte(address + i);
     }
@@ -333,14 +483,26 @@ array<unsigned char>^ FCRam::PeekBytes(long long address, int length) {
 }
 #pragma endregion
 
+
 static array<MemoryDomainProxy^>^ GetInterfaces() {
 
     if (String::IsNullOrWhiteSpace(AllSpec::VanguardSpec->Get<String^>(VSPEC::OPENROMFILENAME)))
         return gcnew array<MemoryDomainProxy^>(0);
 
-    array<MemoryDomainProxy^>^ interfaces = gcnew array<MemoryDomainProxy^>(1);
-    interfaces[0] = (gcnew MemoryDomainProxy(gcnew FCRam));
-    return interfaces;
+    if (UnmanagedWrapper::IS_N3DS()) {
+        array<MemoryDomainProxy ^> ^ interfaces = gcnew array<MemoryDomainProxy ^>(4);
+        interfaces[0] = (gcnew MemoryDomainProxy(gcnew FCRam));
+        interfaces[1] = (gcnew MemoryDomainProxy(gcnew VRAM));
+        interfaces[2] = (gcnew MemoryDomainProxy(gcnew DSP));
+        interfaces[3] = (gcnew MemoryDomainProxy(gcnew N3DSExRam));
+        return interfaces;
+    } else {
+        array<MemoryDomainProxy ^> ^ interfaces = gcnew array<MemoryDomainProxy ^>(3);
+        interfaces[0] = (gcnew MemoryDomainProxy(gcnew FCRam));
+        interfaces[1] = (gcnew MemoryDomainProxy(gcnew VRAM));
+        interfaces[2] = (gcnew MemoryDomainProxy(gcnew DSP));
+        return interfaces;
+    }
 }
 
 static bool RefreshDomains(bool updateSpecs = true) {
