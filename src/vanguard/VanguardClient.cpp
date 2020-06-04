@@ -510,7 +510,7 @@ static bool RefreshDomains(bool updateSpecs = true) {
         AllSpec::VanguardSpec->Get<array<MemoryDomainProxy^>^>(VSPEC::MEMORYDOMAINS_INTERFACES);
     array<MemoryDomainProxy^>^ newInterfaces = GetInterfaces();
 
-    // Bruteforce it since domains can change inconsistently in some configs and we keep code
+    // Bruteforce it since domains can c`   hange inconsistently in some configs and we keep code
     // consistent between implementations
     bool domainsChanged = false;
     if (oldInterfaces == nullptr)
@@ -627,7 +627,7 @@ void VanguardClientUnmanaged::LOAD_GAME_DONE() {
 }
 
 
-void VanguardClientUnmanaged::LOAD_STATE_DONE() {
+void VanguardClientUnmanaged::OAD_STATE_DONE() {
     if (!VanguardClient::enableRTC)
         return;
     VanguardClient::stateLoading = false;
@@ -758,9 +758,10 @@ bool VanguardClient::SaveState(String ^ filename, bool wait) {
 }
 
 void VanguardClientUnmanaged::SAVE_STATE_DONE() {
-    if (!VanguardClient::enableRTC)
+    if (!VanguardClient::enableRTC || VanguardClient::fileToCopy == nullptr ||
+        VanguardClient::fileToCopy == "")
         return;
-    Thread::Sleep(1000);
+    Thread::Sleep(2000);
     System::IO::File::Copy(VanguardClient::fileToCopy, VanguardClient::lastStateName);
 }
 

@@ -193,7 +193,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     LOG_INFO(Frontend, "Host OS: {}", QSysInfo::prettyProductName().toStdString());
     UpdateWindowTitle();
     show();
-    VanguardClientInitializer::Initialize();
 
     game_list->LoadCompatibilityList();
     game_list->PopulateAsync(UISettings::values.game_dirs);
@@ -212,9 +211,11 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui.menubar, &QMenuBar::hovered, this, &GMainWindow::ShowMouseCursor);
 
+    VanguardClientInitializer::Initialize();
+    /*
     if (UISettings::values.check_for_update_on_start) {
         CheckForUpdates();
-    }
+    }*/
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
