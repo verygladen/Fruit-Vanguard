@@ -71,11 +71,15 @@ void EmuThread::run() {
                 // End emulation execution
                 break;
             }
-            if (result != Core::System::ResultStatus::Success) {
+            // VANGUARD_HIJACK
+            if (result == Core::System::ResultStatus::Success_Pause) {
+                this->SetRunning(false);
+                continue;
+            }
+            else if (result != Core::System::ResultStatus::Success ) {
                 this->SetRunning(false);
                 emit ErrorThrown(result, Core::System::GetInstance().GetStatusDetails());
             }
-
             was_active = running || exec_step;
             if (!was_active && !stop_run)
                 emit DebugModeEntered();

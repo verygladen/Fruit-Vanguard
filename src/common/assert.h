@@ -24,7 +24,7 @@ __declspec(noinline, noreturn)
     static void assert_noinline_call(const Fn& fn) {
     fn();
     Crash();
-    exit(1); // Keeps GCC's mouth shut about this actually returning
+    //exit(1); // Keeps GCC's mouth shut about this actually returning
 }
 
 #define ASSERT(_a_)                                                                                \

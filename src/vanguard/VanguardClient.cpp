@@ -43,7 +43,6 @@ using namespace Diagnostics;
 #define ARAM_SIZE 16777216
 #define EXRAM_SIZE 67108864
 
-static int CPU_STEP_Count = 0;
 static void EmuThreadExecute(Action^ callback);
 static void EmuThreadExecute(IntPtr ptr);
 
@@ -543,18 +542,7 @@ static void STEP_CORRUPT() // errors trapped by CPU_STEP
 {
     if (!VanguardClient::enableRTC)
         return;
-    StepActions::Execute();
-    CPU_STEP_Count++;
-    bool autoCorrupt = RtcCore::AutoCorrupt;
-    long errorDelay = RtcCore::ErrorDelay;
-    if (autoCorrupt && CPU_STEP_Count >= errorDelay) {
-        CPU_STEP_Count = 0;
-        array<String^>^ domains = AllSpec::UISpec->Get<array<String^>^>("SELECTEDDOMAINS");
-
-        BlastLayer^ bl = RtcCore::GenerateBlastLayer(domains, -1);
-        if (bl != nullptr)
-            bl->Apply(false, true);
-    }
+    RtcClock::STEP_CORRUPT(true, true);
 }
 
 
@@ -572,7 +560,7 @@ void VanguardClientUnmanaged::LOAD_GAME_START(std::string romPath) {
     if (!VanguardClient::enableRTC)
         return;
     StepActions::ClearStepBlastUnits();
-    CPU_STEP_Count = 0;
+    RtcClock::RESET_COUNT();
 
     String^ gameName = Helpers::utf8StringToSystemString(romPath);
     AllSpec::VanguardSpec->Update(VSPEC::OPENROMFILENAME, gameName, true, true);
@@ -627,7 +615,7 @@ void VanguardClientUnmanaged::LOAD_GAME_DONE() {
 }
 
 
-void VanguardClientUnmanaged::OAD_STATE_DONE() {
+void VanguardClientUnmanaged::LOAD_STATE_DONE() {
     if (!VanguardClient::enableRTC)
         return;
     VanguardClient::stateLoading = false;
@@ -729,7 +717,7 @@ void VanguardClient::LoadRom(String^ filename) {
 
 bool VanguardClient::LoadState(std::string filename) {
     StepActions::ClearStepBlastUnits();
-    CPU_STEP_Count = 0;
+    RtcClock::RESET_COUNT();
     stateLoading = true;
     UnmanagedWrapper::VANGUARD_LOADSTATE(filename);
     // We have to do it this way to prevent deadlock due to synced calls. It sucks but it's required
@@ -762,7 +750,7 @@ void VanguardClientUnmanaged::SAVE_STATE_DONE() {
         VanguardClient::fileToCopy == "")
         return;
     Thread::Sleep(2000);
-    System::IO::File::Copy(VanguardClient::fileToCopy, VanguardClient::lastStateName);
+    System::IO::File::Copy(VanguardClient::fileToCopy, VanguardClient::lastStateName, true);
 }
 
 // No fun anonymous classes with closure here
@@ -886,6 +874,7 @@ void VanguardClient::OnMessageReceived(Object^ sender, NetCoreEventArgs^ e) {
     break;
 
     case REMOTE_RESUMEEMULATION: {
+        UnmanagedWrapper::VANGUARD_RESUMEEMULATION();
     }
     break;
 

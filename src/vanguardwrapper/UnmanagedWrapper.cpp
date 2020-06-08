@@ -45,7 +45,7 @@ void UnmanagedWrapper::VANGUARD_LOADSTATE(const std::string& file) {
             return;
         }
     }
-    Core::System::GetInstance().SendSignal(Core::System::Signal::Load, 9);
+    Core::System::GetInstance().SendSignal(Core::System::Signal::LoadVanguard, 9);
 }
 
 std::string UnmanagedWrapper::VANGUARD_SAVESTATE(const std::string& file) {
@@ -72,10 +72,6 @@ void UnmanagedWrapper::VANGUARD_LOADSTATE_DONE() {
 void UnmanagedWrapper::VANGUARD_SAVESTATE_DONE() {
 
     VanguardClientUnmanaged::SAVE_STATE_DONE();
-}
-
-void UnmanagedWrapper::VANGUARD_RESUMEEMULATION() {
-    //GetCoreThread().Resume();
 }
 
 void UnmanagedWrapper::PADDR_POKEBYTE(long long addr, unsigned char val, long offset) {

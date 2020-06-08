@@ -13,6 +13,7 @@ public:
     static std::string VANGUARD_SAVESTATE(const std::string& file);
     static void VANGUARD_SAVESTATE_DONE();
     static void VANGUARD_LOADSTATE_DONE();
+    void VANGUARD_PAUSEEMULATION();
     static void VANGUARD_RESUMEEMULATION();
     static void VANGUARD_STOPGAME();
     static void VANGUARD_LOADGAME(const std::string& file);

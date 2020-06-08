@@ -125,6 +125,20 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         frame_limiter.WaitOnce();
         return ResultStatus::Success;
     }
+    case Signal::LoadVanguard: {
+        LOG_INFO(Core, "Begin loadvanguard");
+        try {
+            System::LoadState(param);
+            UnmanagedWrapper::VANGUARD_LOADSTATE_DONE();
+            LOG_INFO(Core, "Load completed");
+        } catch (const std::exception& e) {
+            LOG_ERROR(Core, "Error loading: {}", e.what());
+            status_details = e.what();
+            return ResultStatus::ErrorSavestate;
+        }
+        frame_limiter.WaitOnce();
+        return ResultStatus::Success_Pause;
+    }
     case Signal::Save: {
         LOG_INFO(Core, "Begin save");
         try {

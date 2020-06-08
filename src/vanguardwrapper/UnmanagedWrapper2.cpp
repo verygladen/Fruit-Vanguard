@@ -16,6 +16,13 @@ static GMainWindow* GetMainWindow() {
     return nullptr;
 }
 
+void UnmanagedWrapper::VANGUARD_PAUSEEMULATION() {
+    GetMainWindow()->SetEmuThread(false);
+}
+void UnmanagedWrapper::VANGUARD_RESUMEEMULATION() {
+    GetMainWindow()->SetEmuThread(true);
+}
+
 void UnmanagedWrapper::VANGUARD_STOPGAME() {
     GetMainWindow()->ShutdownGame();
 }
