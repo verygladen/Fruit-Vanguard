@@ -1,4 +1,6 @@
 add_library(vanguard STATIC
+    VanguardSettingsWrapper.h
+    VanguardClient.h
     VanguardClient.cpp
 )
 
@@ -6,7 +8,10 @@ SET_TARGET_PROPERTIES(vanguard PROPERTIES LINK_FLAGS "/CLRTHREADATTRIBUTE:STA")
 
 
 file(GLOB CLR_FILES
-VanguardClient.cpp
+    VanguardSettingsWrapper.h
+    VanguardSettings.cpp
+    VanguardClient.h
+    VanguardClient.cpp
 )
 set_source_files_properties(${CLR_FILES} PROPERTIES COMPILE_FLAGS "/clr /EHa /Zc:twoPhase-")
 set_target_properties(vanguard PROPERTIES VS_DOTNET_REFERENCES_COPY_LOCAL ON )

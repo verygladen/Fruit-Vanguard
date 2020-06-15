@@ -6,6 +6,12 @@
 #include <chrono>
 
 #include "video_core/renderer_base.h"
+#include <core\movie.h>
+
+#include <qapplication.h>
+#include "citra_qt/main.h"
+#include <core\settings.h>
+#include <core\hle\service\cfg\cfg.h>
 
 //C++/CLI has various restrictions (no std::mutex for example), so we can't actually include certain headers directly
 //What we CAN do is wrap those functions
@@ -23,10 +29,7 @@ std::string GetSaveStatePath(u64 program_id, u32 slot) {
 
 
 bool UnmanagedWrapper::IS_N3DS() {
-    return Settings::values.is_new_3ds ;
-}
-void UnmanagedWrapper::SET_N3DS(bool isN3DS) {
-    Settings::values.is_new_3ds = isN3DS;
+    return Settings::values.is_new_3ds;
 }
 
 std::string UnmanagedWrapper::VANGUARD_GETGAMENAME() {
@@ -107,4 +110,49 @@ void UnmanagedWrapper::VANGUARD_CORESTEP() {
 void UnmanagedWrapper::LOAD_STATE_DONE() {
 
     VanguardClientUnmanaged::LOAD_STATE_DONE();
+}
+
+static GMainWindow* GetMainWindow() {
+    for (QWidget* w : qApp->topLevelWidgets()) {
+        if (GMainWindow* main = qobject_cast<GMainWindow*>(w)) {
+            return main;
+        }
+    }
+    return nullptr;
+}
+
+void UnmanagedWrapper::VANGUARD_PAUSEEMULATION() {
+    GetMainWindow()->SetEmuThread(false);
+}
+void UnmanagedWrapper::VANGUARD_RESUMEEMULATION() {
+    GetMainWindow()->SetEmuThread(true);
+}
+
+void UnmanagedWrapper::VANGUARD_STOPGAME() {
+    GetMainWindow()->ShutdownGame();
+}
+void UnmanagedWrapper::VANGUARD_LOADGAME(const std::string& file) {
+    GetMainWindow()->BootGame(QString::fromStdString(file));
+}
+
+VanguardSettingsUnmanaged UnmanagedWrapper::nSettings{};
+void UnmanagedWrapper::GetSettingsFromCitra() {
+    nSettings.is_new_3ds = Settings::values.is_new_3ds;
+    nSettings.region_value = Settings::values.region_value;
+    nSettings.init_clock = (u32)Settings::InitClock::FixedTime;
+    nSettings.init_time = Settings::values.init_time;
+    nSettings.shaders_accurate_mul = Settings::values.shaders_accurate_mul;
+    nSettings.upright_screen = Settings::values.upright_screen;
+    nSettings.enable_dsp_lle = Settings::values.enable_dsp_lle;
+    nSettings.enable_dsp_lle_multithread = Settings::values.enable_dsp_lle_multithread;
+}
+void UnmanagedWrapper::SetSettingsFromUnmanagedWrapper() {
+    Settings::values.is_new_3ds = nSettings.is_new_3ds;
+    Settings::values.region_value = nSettings.region_value;
+    Settings::values.init_clock = Settings::InitClock::FixedTime;
+    Settings::values.init_time = nSettings.init_time;
+    Settings::values.shaders_accurate_mul = nSettings.shaders_accurate_mul;
+    Settings::values.upright_screen = nSettings.upright_screen;
+    Settings::values.enable_dsp_lle = nSettings.enable_dsp_lle;
+    Settings::values.enable_dsp_lle_multithread = nSettings.enable_dsp_lle_multithread;
 }

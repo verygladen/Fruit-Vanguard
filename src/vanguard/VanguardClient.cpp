@@ -13,6 +13,8 @@
 #include <msclr/marshal_cppstd.h>
 
 #include "vanguardwrapper/UnmanagedWrapper.h"
+#include "vanguardwrapper/UnmanagedWrapper2.h"
+#include "VanguardSettingsWrapper.h"
 
 //#include "core/core.h"
 #using < system.dll>
@@ -64,6 +66,9 @@ public:
     static void LoadRom(String^ filename);
     static bool LoadState(std::string filename);
     static bool SaveState(String^ filename, bool wait);
+
+    static String ^ GetConfigAsJson(VanguardSettingsWrapper ^ settings);
+    static VanguardSettingsWrapper ^ GetConfigFromJson(String ^ json);
 
     static void LoadWindowPosition();
     static void SaveWindowPosition();
@@ -265,26 +270,20 @@ void VanguardClient::StopClient() {
 void VanguardClient::LoadWindowPosition() {
     if (connector == nullptr)
         return;
-
 }
 
 void VanguardClient::SaveWindowPosition() {
 }
 
 String^ VanguardClient::GetSyncSettings() {
-    //For now, just sync if it's N3DS or not
-    if (UnmanagedWrapper::IS_N3DS()) {
-        return "N3DS";
-    }
-    return "";
+    auto wrapper = VanguardSettingsWrapper::GetVanguardSettingsFromCitra();
+    auto ws = GetConfigAsJson(wrapper);
+    return ws;
 }
 
 void VanguardClient::SetSyncSettings(String^ ss) {
-    if(ss == "N3DS") {
-        UnmanagedWrapper::SET_N3DS(true);
-    }else {
-        UnmanagedWrapper::SET_N3DS(false);
-    }
+    auto wrapper = GetConfigFromJson(ss);
+    VanguardSettingsWrapper::SetSettingsFromWrapper(wrapper);
 }
 
 #pragma region MemoryDomains
@@ -538,6 +537,14 @@ static bool RefreshDomains(bool updateSpecs = true) {
 
 #pragma endregion
 
+String ^ VanguardClient::GetConfigAsJson(VanguardSettingsWrapper ^ settings) {
+    return JsonHelper::Serialize(settings);
+}
+
+VanguardSettingsWrapper ^ VanguardClient::GetConfigFromJson(String ^ str) {
+    return JsonHelper::Deserialize<VanguardSettingsWrapper ^>(str);
+}
+
 static void STEP_CORRUPT() // errors trapped by CPU_STEP
 {
     if (!VanguardClient::enableRTC)
@@ -585,6 +592,9 @@ void VanguardClientUnmanaged::LOAD_GAME_DONE() {
         char replaceChar = L'-';
         gameDone->Set(VSPEC::GAMENAME,
                       CorruptCore_Extensions::MakeSafeFilename(gameName, replaceChar));
+
+        String ^ syncsettings = VanguardClient::GetConfigAsJson(VanguardSettingsWrapper::GetVanguardSettingsFromCitra());
+        gameDone->Set(VSPEC::SYNCSETTINGS, syncsettings);
 
         AllSpec::VanguardSpec->Update(gameDone, true, false);
 
@@ -893,4 +903,38 @@ void VanguardClient::OnMessageReceived(Object^ sender, NetCoreEventArgs^ e) {
     default:
         break;
     }
+}
+
+VanguardSettingsWrapper ^ VanguardSettingsWrapper::GetVanguardSettingsFromCitra() {
+    VanguardSettingsWrapper ^ vSettings = gcnew VanguardSettingsWrapper();
+
+    UnmanagedWrapper::GetSettingsFromCitra();
+    vSettings->is_new_3ds = UnmanagedWrapper::nSettings.is_new_3ds;
+    vSettings->region_value = UnmanagedWrapper::nSettings.region_value;
+    vSettings->init_clock = UnmanagedWrapper::nSettings.init_clock;
+    vSettings->init_time = UnmanagedWrapper::nSettings.init_time;
+    vSettings->shaders_accurate_mul = UnmanagedWrapper::nSettings.shaders_accurate_mul;
+    vSettings->upright_screen = UnmanagedWrapper::nSettings.upright_screen;
+    vSettings->enable_dsp_lle = UnmanagedWrapper::nSettings.enable_dsp_lle;
+    vSettings->enable_dsp_lle_multithread = UnmanagedWrapper::nSettings.enable_dsp_lle_multithread;
+
+    // settings->birthmonth = Service::PTM::Module::GetPlayCoins();
+    // settings->birthday = Service::PTM::Module::GetPlayCoins();
+    // settings->language_index = GetSystemLanguage()
+    // settings->country = Service::PTM::Module::GetPlayCoins();
+    // settings->play_coin = Service::PTM::Module::GetPlayCoins();
+
+    return vSettings;
+}
+
+void VanguardSettingsWrapper::SetSettingsFromWrapper(VanguardSettingsWrapper ^ vSettings) {
+    UnmanagedWrapper::nSettings.is_new_3ds = vSettings->is_new_3ds;
+    UnmanagedWrapper::nSettings.region_value = vSettings->region_value;
+    UnmanagedWrapper::nSettings.init_clock = vSettings->init_clock;
+    UnmanagedWrapper::nSettings.init_time = vSettings->init_time;
+    UnmanagedWrapper::nSettings.shaders_accurate_mul = vSettings->shaders_accurate_mul;
+    UnmanagedWrapper::nSettings.upright_screen = vSettings->upright_screen;
+    UnmanagedWrapper::nSettings.enable_dsp_lle = vSettings->enable_dsp_lle;
+    UnmanagedWrapper::nSettings.enable_dsp_lle_multithread = vSettings->enable_dsp_lle_multithread;
+    UnmanagedWrapper::SetSettingsFromUnmanagedWrapper();
 }

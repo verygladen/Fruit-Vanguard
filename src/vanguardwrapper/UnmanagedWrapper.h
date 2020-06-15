@@ -1,9 +1,34 @@
 #pragma once
 #include <string>
 #include <mutex>
+#include "common/common_types.h"
 
 
 
+struct VanguardSettingsUnmanaged {
+
+public:
+    bool is_new_3ds;
+
+    int region_value;
+    u32 init_clock;
+    u64 init_time;
+
+    bool shaders_accurate_mul;
+
+    bool upright_screen;
+
+    bool enable_dsp_lle;
+    bool enable_dsp_lle_multithread;
+
+    void GetSettingsFromCitra();
+
+    //  int birthmonth;
+    //  int birthday;
+    //  int language_index;
+    //  u8 country;
+    //  u16 play_coin;
+};
 typedef void (*FnPtr_VanguardMethod)();
 class UnmanagedWrapper
 {
@@ -13,8 +38,6 @@ public:
     static std::string VANGUARD_SAVESTATE(const std::string& file);
     static void VANGUARD_SAVESTATE_DONE();
     static void VANGUARD_LOADSTATE_DONE();
-    void VANGUARD_PAUSEEMULATION();
-    static void VANGUARD_RESUMEEMULATION();
     static void VANGUARD_STOPGAME();
     static void VANGUARD_LOADGAME(const std::string& file);
     static std::string VANGUARD_GETGAMENAME();
@@ -25,7 +48,12 @@ public:
     static void VANGUARD_CORESTEP();
     static void LOAD_STATE_DONE();
     static bool IS_N3DS();
-    static void SET_N3DS(bool isN3DS);
+    static void VANGUARD_PAUSEEMULATION();
+    static void VANGUARD_RESUMEEMULATION();
+    static void GetSettingsFromCitra();
+    static void SetSettingsFromUnmanagedWrapper();
+
+    static VanguardSettingsUnmanaged nSettings;
 
     static bool savestate_done; //REPLACE THIS
 };

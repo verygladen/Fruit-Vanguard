@@ -524,11 +524,12 @@ void Config::ReadSystemValues() {
     Settings::values.is_new_3ds = ReadSetting(QStringLiteral("is_new_3ds"), true).toBool();
     Settings::values.region_value =
         ReadSetting(QStringLiteral("region_value"), Settings::REGION_VALUE_AUTO_SELECT).toInt();
-    Settings::values.init_clock = static_cast<Settings::InitClock>(
+    //RTC_Hijack - Override init_clock
+    /*Settings::values.init_clock = static_cast<Settings::InitClock>(
         ReadSetting(QStringLiteral("init_clock"), static_cast<u32>(Settings::InitClock::SystemTime))
-            .toInt());
-    Settings::values.init_time =
-        ReadSetting(QStringLiteral("init_time"), 946681277ULL).toULongLong();
+            .toInt());*/
+    Settings::values.init_clock = Settings::InitClock::FixedTime;
+    Settings::values.init_time = ReadSetting(QStringLiteral("init_time"), 946681277ULL).toULongLong();
 
     qt_config->endGroup();
 }
@@ -1023,8 +1024,14 @@ void Config::SaveSystemValues() {
     WriteSetting(QStringLiteral("is_new_3ds"), Settings::values.is_new_3ds, true);
     WriteSetting(QStringLiteral("region_value"), Settings::values.region_value,
                  Settings::REGION_VALUE_AUTO_SELECT);
+    //Vanguard_Hijack - Override init_clock
+    /*
     WriteSetting(QStringLiteral("init_clock"), static_cast<u32>(Settings::values.init_clock),
-                 static_cast<u32>(Settings::InitClock::SystemTime));
+        static_cast<u32>(Settings::InitClock::SystemTime));
+        */
+    WriteSetting(QStringLiteral("init_clock"), static_cast<u32>(Settings::InitClock::FixedTime),
+                 static_cast<u32>(Settings::InitClock::FixedTime));
+
     WriteSetting(QStringLiteral("init_time"),
                  static_cast<unsigned long long>(Settings::values.init_time), 946681277ULL);
 
