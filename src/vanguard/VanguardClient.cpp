@@ -13,7 +13,6 @@
 #include <msclr/marshal_cppstd.h>
 
 #include "vanguardwrapper/UnmanagedWrapper.h"
-#include "vanguardwrapper/UnmanagedWrapper2.h"
 #include "VanguardSettingsWrapper.h"
 
 //#include "core/core.h"
@@ -282,7 +281,15 @@ String^ VanguardClient::GetSyncSettings() {
 }
 
 void VanguardClient::SetSyncSettings(String^ ss) {
-    auto wrapper = GetConfigFromJson(ss);
+    VanguardSettingsWrapper^ wrapper = nullptr;
+    //Hack for now to maintain compatibility.
+    if (ss == "N3DS") {
+        wrapper = gcnew VanguardSettingsWrapper();
+        wrapper->is_new_3ds = true;
+    }
+    else {
+     wrapper = GetConfigFromJson(ss);
+    }
     VanguardSettingsWrapper::SetSettingsFromWrapper(wrapper);
 }
 
@@ -930,7 +937,7 @@ VanguardSettingsWrapper ^ VanguardSettingsWrapper::GetVanguardSettingsFromCitra(
 void VanguardSettingsWrapper::SetSettingsFromWrapper(VanguardSettingsWrapper ^ vSettings) {
     UnmanagedWrapper::nSettings.is_new_3ds = vSettings->is_new_3ds;
     UnmanagedWrapper::nSettings.region_value = vSettings->region_value;
-    UnmanagedWrapper::nSettings.init_clock = vSettings->init_clock;
+    UnmanagedWrapper::nSettings.init_clock = 1;
     UnmanagedWrapper::nSettings.init_time = vSettings->init_time;
     UnmanagedWrapper::nSettings.shaders_accurate_mul = vSettings->shaders_accurate_mul;
     UnmanagedWrapper::nSettings.upright_screen = vSettings->upright_screen;
