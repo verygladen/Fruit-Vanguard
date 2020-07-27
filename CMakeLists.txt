@@ -126,7 +126,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set up output paths for executable binaries
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/$<CONFIG>)
 
 
 # System imported libraries
@@ -186,7 +186,7 @@ if (ENABLE_QT)
         set(QT_PREFIX_HINT)
     endif()
 
-    find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL Multimedia ${QT_PREFIX_HINT})
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia ${QT_PREFIX_HINT})
 
     if (ENABLE_QT_TRANSLATION)
         find_package(Qt5 REQUIRED COMPONENTS LinguistTools ${QT_PREFIX_HINT})
