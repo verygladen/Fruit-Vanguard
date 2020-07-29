@@ -33,10 +33,9 @@ jobs:
       working-directory: ${{runner.workspace}}\citra-vanguard\citra-vanguard
       run: New-Item -ItemType Directory -Path build
     - name: Citra prebuild
-      shell: cmd
       run: |
         cd citra-vanguard\build
-        cmake .. -DCITRA_DONT_BUILD_DEDICATED_ROOM=true -DCITRA_DONT_BUILD_TESTS=true -DENABLE_SDL2=false -DCITRA_USE_BUNDLED_QT=1 -DENABLE_MF=ON 2>&0 & exit 0
+        cmake .. -DCITRA_DONT_BUILD_DEDICATED_ROOM=true -DCITRA_DONT_BUILD_TESTS=true -DENABLE_SDL2=false -DCITRA_USE_BUNDLED_QT=1
     - name: Citra build
       run: |
         cd citra-vanguard\build
