@@ -35,7 +35,7 @@ jobs:
     - name: Citra prebuild
       run: |
         cd citra-vanguard\build
-        cmake .. -DDONT_BUILD_DEDICATED_ROOM=true -DDONT_BUILD_TESTS=true -DENABLE_SDL2=false -DENABLE_QT=true
+        cmake .. -DCITRA_DONT_BUILD_DEDICATED_ROOM=true -DCITRA_DONT_BUILD_TESTS=true -DENABLE_SDL2=false
     - name: Citra build
       run: |
         cd citra-vanguard\build
