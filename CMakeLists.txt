@@ -186,6 +186,8 @@ if (ENABLE_QT)
         set(QT_PREFIX_HINT)
     endif()
 
+    find_package(Qt5 REQUIRED COMPONENTS OpenGL ${QT_PREFIX_HINT}) # VANGUARD: Required for CI, see https://github.com/NarryG/citra-vanguard/pull/2/files/a2fc9cbfdb765272b7a8288ce972a5d8ba9db486#r462475091
+
     find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia ${QT_PREFIX_HINT})
 
     if (ENABLE_QT_TRANSLATION)
