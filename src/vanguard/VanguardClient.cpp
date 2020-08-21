@@ -31,6 +31,7 @@ using namespace cli;
 using namespace System;
 using namespace Text;
 using namespace RTCV;
+using namespace RTCV::CorruptCore::Extensions;
 using namespace NetCore;
 using namespace CorruptCore;
 using namespace Vanguard;
@@ -598,7 +599,7 @@ void VanguardClientUnmanaged::LOAD_GAME_DONE() {
 
         char replaceChar = L'-';
         gameDone->Set(VSPEC::GAMENAME,
-                      CorruptCore_Extensions::MakeSafeFilename(gameName, replaceChar));
+                      StringExtensions::MakeSafeFilename(gameName, replaceChar));
 
         String ^ syncsettings = VanguardClient::GetConfigAsJson(VanguardSettingsWrapper::GetVanguardSettingsFromCitra());
         gameDone->Set(VSPEC::SYNCSETTINGS, syncsettings);
@@ -829,7 +830,7 @@ void VanguardClient::OnMessageReceived(Object^ sender, NetCoreEventArgs^ e) {
         String ^ gameName = Helpers::utf8StringToSystemString(UnmanagedWrapper::VANGUARD_GETGAMENAME());
 
         char replaceChar = L'-';
-        String^ prefix = CorruptCore_Extensions::MakeSafeFilename(gameName, replaceChar);
+        String^ prefix = StringExtensions::MakeSafeFilename(gameName, replaceChar);
         prefix = prefix->Substring(prefix->LastIndexOf('\\') + 1);
 
         String^ path = nullptr;
