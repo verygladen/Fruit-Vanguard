@@ -131,9 +131,9 @@ getDefaultPartial() {
 void VanguardClient::SpecUpdated(Object^ sender, SpecUpdateEventArgs^ e) {
     PartialSpec^ partial = e->partialSpec;
 
-    LocalNetCoreRouter::Route(Commands::Basic::CorruptCore,
+    LocalNetCoreRouter::Route(Endpoints::CorruptCore,
                               Commands::Remote::PushVanguardSpecUpdate, partial, true);
-    LocalNetCoreRouter::Route(Commands::Basic::UI, Commands::Remote::PushVanguardSpecUpdate,
+    LocalNetCoreRouter::Route(Endpoints::UI, Commands::Remote::PushVanguardSpecUpdate,
                               partial, true);
 }
 
@@ -148,9 +148,9 @@ void VanguardClient::RegisterVanguardSpec() {
     if (VanguardClient::attached)
         RTCV::Vanguard::VanguardConnector::PushVanguardSpecRef(AllSpec::VanguardSpec);
 
-    LocalNetCoreRouter::Route(Commands::Basic::CorruptCore,
+    LocalNetCoreRouter::Route(Endpoints::CorruptCore,
                               Commands::Remote::PushVanguardSpec, emuSpecTemplate, true);
-    LocalNetCoreRouter::Route(Commands::Basic::UI, Commands::Remote::PushVanguardSpec,
+    LocalNetCoreRouter::Route(Endpoints::UI, Commands::Remote::PushVanguardSpec,
                               emuSpecTemplate, true);
     AllSpec::VanguardSpec->SpecUpdated += gcnew EventHandler<SpecUpdateEventArgs^>(
         &VanguardClient::SpecUpdated);
@@ -200,12 +200,28 @@ static Assembly^ CurrentDomain_AssemblyResolve(Object^ sender, ResolveEventArgs^
 }
 
 // Create our VanguardClient
-void VanguardClientInitializer::StartVanguardClient() {
+void VanguardClientInitializer::Initialize() {
+    // This has to be in its own method where no other dlls are used so the JIT can compile it
+    AppDomain::CurrentDomain->AssemblyResolve +=
+        gcnew ResolveEventHandler(CurrentDomain_AssemblyResolve);
 
+    ConfigureVisualStyles();
+    StartVanguardClient();
+}
+
+//This ensures things render as we want them.
+//There are no issues running this within QT/WXWidgets applications
+//This HAS to be its own method for the JIT. If it's merged with StartVanguardClient(), fun exceptions occur
+void VanguardClientInitializer::ConfigureVisualStyles()
+{
     // this needs to be done before the warnings/errors show up
     System::Windows::Forms::Application::EnableVisualStyles();
     System::Windows::Forms::Application::SetCompatibleTextRenderingDefault(false);
+}
 
+// Create our VanguardClient
+void VanguardClientInitializer::StartVanguardClient()
+{
     System::Windows::Forms::Form^ dummy = gcnew System::Windows::Forms::Form();
     IntPtr Handle = dummy->Handle;
     SyncObjectSingleton::SyncObject = dummy;
@@ -227,14 +243,6 @@ void VanguardClientInitializer::StartVanguardClient() {
     //VanguardClient::LoadWindowPosition();
 }
 
-// Create our VanguardClient
-void VanguardClientInitializer::Initialize() {
-    // This has to be in its own method where no other dlls are used so the JIT can compile it
-    AppDomain::CurrentDomain->AssemblyResolve +=
-        gcnew ResolveEventHandler(CurrentDomain_AssemblyResolve);
-
-    StartVanguardClient();
-}
 
 void VanguardClient::StartClient() {
     RTCV::Common::Logging::StartLogging(logPath);
@@ -535,7 +543,7 @@ static bool RefreshDomains(bool updateSpecs = true) {
 
     if (updateSpecs) {
         AllSpec::VanguardSpec->Update(VSPEC::MEMORYDOMAINS_INTERFACES, newInterfaces, true, true);
-        LocalNetCoreRouter::Route(Commands::Basic::CorruptCore,
+        LocalNetCoreRouter::Route(Endpoints::CorruptCore,
                                   Commands::Remote::EventDomainsUpdated, domainsChanged,
                                   true);
     }
@@ -609,7 +617,7 @@ void VanguardClientUnmanaged::LOAD_GAME_DONE() {
         bool domainsChanged = RefreshDomains(true);
 
         if (oldGame != gameName) {
-            LocalNetCoreRouter::Route(Commands::Basic::UI,
+            LocalNetCoreRouter::Route(Endpoints::UI,
                                       Commands::Basic::ResetGameProtectionIfRunning, true);
         }
     } catch (Exception^ e) {
