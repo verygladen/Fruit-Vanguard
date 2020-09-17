@@ -20,7 +20,8 @@ get_timestamp(BUILD_DATE)
 # Also if this is a CI build, add the build name (ie: Nightly, Canary) to the scm_rev file as well
 set(REPO_NAME "")
 set(BUILD_VERSION "0")
-if (DEFINED ENV{CI})
+# if (DEFINED ENV{CI}) # Removed for compatibility with Github CI
+if (0)
   if (DEFINED ENV{TRAVIS})
     set(BUILD_REPOSITORY $ENV{TRAVIS_REPO_SLUG})
     set(BUILD_TAG $ENV{TRAVIS_TAG})
