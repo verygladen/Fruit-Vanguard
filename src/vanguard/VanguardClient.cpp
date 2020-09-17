@@ -131,9 +131,9 @@ getDefaultPartial() {
 void VanguardClient::SpecUpdated(Object^ sender, SpecUpdateEventArgs^ e) {
     PartialSpec^ partial = e->partialSpec;
 
-    LocalNetCoreRouter::Route(NetcoreCommands::CORRUPTCORE,
-                              NetcoreCommands::REMOTE_PUSHVANGUARDSPECUPDATE, partial, true);
-    LocalNetCoreRouter::Route(NetcoreCommands::UI, NetcoreCommands::REMOTE_PUSHVANGUARDSPECUPDATE,
+    LocalNetCoreRouter::Route(Commands::Basic::CorruptCore,
+                              Commands::Remote::PushVanguardSpecUpdate, partial, true);
+    LocalNetCoreRouter::Route(Commands::Basic::UI, Commands::Remote::PushVanguardSpecUpdate,
                               partial, true);
 }
 
@@ -148,9 +148,9 @@ void VanguardClient::RegisterVanguardSpec() {
     if (VanguardClient::attached)
         RTCV::Vanguard::VanguardConnector::PushVanguardSpecRef(AllSpec::VanguardSpec);
 
-    LocalNetCoreRouter::Route(NetcoreCommands::CORRUPTCORE,
-                              NetcoreCommands::REMOTE_PUSHVANGUARDSPEC, emuSpecTemplate, true);
-    LocalNetCoreRouter::Route(NetcoreCommands::UI, NetcoreCommands::REMOTE_PUSHVANGUARDSPEC,
+    LocalNetCoreRouter::Route(Commands::Basic::CorruptCore,
+                              Commands::Remote::PushVanguardSpec, emuSpecTemplate, true);
+    LocalNetCoreRouter::Route(Commands::Basic::UI, Commands::Remote::PushVanguardSpec,
                               emuSpecTemplate, true);
     AllSpec::VanguardSpec->SpecUpdated += gcnew EventHandler<SpecUpdateEventArgs^>(
         &VanguardClient::SpecUpdated);
@@ -543,8 +543,8 @@ static bool RefreshDomains(bool updateSpecs = true) {
 
     if (updateSpecs) {
         AllSpec::VanguardSpec->Update(VSPEC::MEMORYDOMAINS_INTERFACES, newInterfaces, true, true);
-        LocalNetCoreRouter::Route(NetcoreCommands::CORRUPTCORE,
-                                  NetcoreCommands::REMOTE_EVENT_DOMAINSUPDATED, domainsChanged,
+        LocalNetCoreRouter::Route(Commands::Basic::CorruptCore,
+                                  Commands::Remote::EventDomainsUpdated, domainsChanged,
                                   true);
     }
 
@@ -565,7 +565,7 @@ static void STEP_CORRUPT() // errors trapped by CPU_STEP
 {
     if (!VanguardClient::enableRTC)
         return;
-    RtcClock::STEP_CORRUPT(true, true);
+    RtcClock::StepCorrupt(true, true);
 }
 
 
@@ -583,7 +583,7 @@ void VanguardClientUnmanaged::LOAD_GAME_START(std::string romPath) {
     if (!VanguardClient::enableRTC)
         return;
     StepActions::ClearStepBlastUnits();
-    RtcClock::RESET_COUNT();
+    RtcClock::ResetCount();
 
     String^ gameName = Helpers::utf8StringToSystemString(romPath);
     AllSpec::VanguardSpec->Update(VSPEC::OPENROMFILENAME, gameName, true, true);
@@ -617,8 +617,8 @@ void VanguardClientUnmanaged::LOAD_GAME_DONE() {
         bool domainsChanged = RefreshDomains(true);
 
         if (oldGame != gameName) {
-            LocalNetCoreRouter::Route(NetcoreCommands::UI,
-                                      NetcoreCommands::RESET_GAME_PROTECTION_IF_RUNNING, true);
+            LocalNetCoreRouter::Route(Commands::Basic::UI,
+                                      Commands::Basic::ResetGameProtectionIfRunning, true);
         }
     } catch (Exception^ e) {
         Trace::WriteLine(e->ToString());
@@ -652,7 +652,7 @@ void VanguardClientUnmanaged::GAME_CLOSED() {
         return;
     AllSpec::VanguardSpec->Update(VSPEC::OPENROMFILENAME, "", true, true);
     RefreshDomains();
-    RtcCore::GAME_CLOSED(true);
+    RtcCore::InvokeGameClosed(true);
 }
 
 
@@ -743,7 +743,7 @@ void VanguardClient::LoadRom(String^ filename) {
 
 bool VanguardClient::LoadState(std::string filename) {
     StepActions::ClearStepBlastUnits();
-    RtcClock::RESET_COUNT();
+    RtcClock::ResetCount();
     stateLoading = true;
     UnmanagedWrapper::VANGUARD_LOADSTATE(filename);
     // We have to do it this way to prevent deadlock due to synced calls. It sucks but it's required
