@@ -1,13 +1,13 @@
 #!/bin/bash -ex
 
-if grep -nrI '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .travis* dist/*.desktop \
+if grep -nrI '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .ci* dist/*.desktop \
                  dist/*.svg dist/*.xml; then
     echo Trailing whitespace found, aborting
     exit 1
 fi
 
 # Default clang-format points to default 3.5 version one
-CLANG_FORMAT=clang-format-6.0
+CLANG_FORMAT=clang-format-10
 $CLANG_FORMAT --version
 
 if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then
