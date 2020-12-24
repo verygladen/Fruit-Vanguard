@@ -6,7 +6,6 @@
 
 #include <array>
 #include <memory>
-#include <QLabel>
 #include <QMainWindow>
 #include <QTimer>
 #include <QTranslator>
@@ -16,7 +15,6 @@
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
 #include "core/savestate.h"
-#include "ui_main.h"
 
 class AboutDialog;
 class Config;
@@ -40,6 +38,7 @@ class MultiplayerState;
 class ProfilerWidget;
 template <typename>
 class QFutureWatcher;
+class QLabel;
 class QProgressBar;
 class RegistersWidget;
 class Updater;
@@ -47,6 +46,10 @@ class WaitTreeWidget;
 
 namespace DiscordRPC {
 class DiscordInterface;
+}
+
+namespace Ui {
+class MainWindow;
 }
 
 class GMainWindow : public QMainWindow {
@@ -220,6 +223,7 @@ private slots:
     void OnCheckForUpdates();
     void OnOpenUpdater();
     void OnLanguageChanged(const QString& locale);
+    void OnMouseActivity();
 
 private:
     bool ValidateMovie(const QString& path, u64 program_id = 0);
@@ -232,7 +236,7 @@ private:
     void HideMouseCursor();
     void ShowMouseCursor();
 
-    Ui::MainWindow ui;
+    std::unique_ptr<Ui::MainWindow> ui;
 
     GRenderWindow* render_window;
 
@@ -312,6 +316,7 @@ protected:
     void dragMoveEvent(QDragMoveEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 };
 
 Q_DECLARE_METATYPE(std::size_t);

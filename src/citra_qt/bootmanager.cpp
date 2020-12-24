@@ -176,9 +176,7 @@ bool OpenGLWindow::event(QEvent* event) {
     case QEvent::Drop:
         GetMainWindow()->DropAction(static_cast<QDropEvent*>(event));
         return true;
-    case QEvent::DragResponse:
     case QEvent::DragEnter:
-    case QEvent::DragLeave:
     case QEvent::DragMove:
         GetMainWindow()->AcceptDropEvent(static_cast<QDropEvent*>(event));
         return true;
@@ -303,7 +301,7 @@ void GRenderWindow::mousePressEvent(QMouseEvent* event) {
     } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
     }
-    QWidget::mousePressEvent(event);
+    emit MouseActivity();
 }
 
 void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
@@ -314,7 +312,7 @@ void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
     const auto [x, y] = ScaleTouch(pos);
     this->TouchMoved(x, y);
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
-    QWidget::mouseMoveEvent(event);
+    emit MouseActivity();
 }
 
 void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
@@ -325,6 +323,7 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
         this->TouchReleased();
     else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->EndTilt();
+    emit MouseActivity();
 }
 
 void GRenderWindow::TouchBeginEvent(const QTouchEvent* event) {
@@ -338,7 +337,7 @@ void GRenderWindow::TouchUpdateEvent(const QTouchEvent* event) {
     int active_points = 0;
 
     // average all active touch points
-    for (const auto tp : event->touchPoints()) {
+    for (const auto& tp : event->touchPoints()) {
         if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
             active_points++;
             pos += tp.pos();

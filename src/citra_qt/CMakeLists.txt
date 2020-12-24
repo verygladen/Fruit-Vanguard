@@ -225,8 +225,8 @@ target_sources(citra-qt
     PRIVATE
         ${COMPAT_LIST}
         ${ICONS}
-        ${THEMES}
         ${LANGUAGES}
+        ${THEMES}
 )
 
 if (APPLE)
